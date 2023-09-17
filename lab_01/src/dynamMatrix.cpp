@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 
+
 int **allocateMatrix(const std::size_t rows, const std::size_t columns)
 {
     std::size_t flag = OK;

@@ -1,43 +1,44 @@
 #include <iostream>
-#include <cstring>
 #include <string>
 
-#include <struct.hpp>
 #include <io_funcs.hpp>
+#include <return_codes.hpp>
+#include <algorithms.hpp>
 
 #define MAX_LEN_ANSWER 3
-#define WORD_LEN 20
+#define FIRST_WORD "первое"
+#define SECOND_WORD "второе"
 
 int main()
 {
-    char firstWord[WORD_LEN], secondWord[WORD_LEN];
-    int rc = OK;
+    setlocale(LC_ALL, "Russian");
+
+    std::string firstWord, secondWord;
+    std::string answerChar;
     int choice = -1;
-    char answerChar[MAX_LEN_ANSWER];
+    int rc = OK;
+
+    std::cout << std::endl;
+    firstWord = inputWord(FIRST_WORD);
+    secondWord = inputWord(SECOND_WORD);
 
     while (choice != 0)
     {
-        std::cout << "Введите первое слово: ";
-        std::cin >> firstWord;
-        std::cout << std::endl;
-        std::cout << "Введите второе слово: ";
-        std::cout << std::endl;
-
         menu();
         
         std::cout << "\tВыберите действие: ";
         std::cin >> answerChar;
-        choice = std::atoi(answerChar);
+        choice = std::stoi(answerChar);
 
         while (!choice)
         {
-            if (std::strcmp(answerChar, "0") == 0)
+            if (answerChar == "0")
                 break;
 
             std::cout << "\tНеправильный ввод!" << std::endl;
             std::cout << "\tВыберите действие!" << std::endl;
             std::cin >> answerChar;
-            choice = std::atoi(answerChar);
+            choice = std::stoi(answerChar);
         }
         switch (choice)
         {
@@ -45,7 +46,14 @@ int main()
                 std::cout << "\tПрограмма завершена!" << std::endl;
                 return OK;
             case (1):
+                rc = normalLevenAlgorithm(firstWord, secondWord, 1);
+                std::cout << "Нерекурсивный алгоритм поиска расстояния Левенштейна: " << rc << std::endl;
+                rc = OK;
                 break;    
+            default:
+                std::cout << "Ошибка: Неправильный ввод!" << std::endl;
+                break;
+
         }
     }
 
