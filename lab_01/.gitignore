@@ -1,0 +1,14 @@
+.vscode
+obj/
+*.drawio.bkp
+*.aux
+*.log
+*.bbl
+*.blg
+*.log
+*.out
+*.gz
+*.toc
+*.exe
+*.drawio.dtmp
+*.drawio

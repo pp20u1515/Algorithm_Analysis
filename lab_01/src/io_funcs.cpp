@@ -1,5 +1,7 @@
 #include "io_funcs.hpp"
 
+#include <dlfcn.h>
+
 void menu()
 {
     std::cout << "\t\t\tМеню" << std::endl;
@@ -14,7 +16,7 @@ void menu()
     std::cout << "\t0) Завершить программу." << std::endl;                                             
 }
 
-void printMatrix(int **matrix, const std::size_t rows, const std::size_t columns)
+void printMatrix(const std::vector<std::vector<int>> &matrix, const std::size_t &rows, const std::size_t &columns)
 {
     for (std::size_t indexI = 0; indexI < rows; indexI++)
     {
@@ -25,14 +27,14 @@ void printMatrix(int **matrix, const std::size_t rows, const std::size_t columns
     }
 }
 
-std::string inputWord(std::string chooseWord)
+std::wstring inputWord(const std::string chooseWord)
 {
-    std::string word;
+    std::wstring word;
 
     while (word.empty())
     {       
         std::cout << "\tВведите " << chooseWord << " слово: ";
-        std::cin >> word;
+        std::wcin >> word;
     }
     return word;
 }

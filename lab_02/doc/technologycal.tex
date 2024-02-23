@@ -1,0 +1,191 @@
+\chapter{Технологическая часть}
+
+В этом разделе осуществляется выбор способов реализации, и указываются требования к программному обеспечению (ПО). 
+Также предоставляются листинги выполненных алгоритмов.
+
+\section{Требования к программному обеспечению}
+
+Программе передаются две целочисленые матрицы в качестве входных данных, а на выход получается матрица resultMatrix. 
+resultMatrix -- результат умножения введенных пользователем матриц. 
+Кроме того, необходимо сообщить затраченное каждым алгоритмом процессорное время и память.
+
+В создаваемом приложении пользователю должны быть доступны функции ввода двух матриц и выбора желаемого алгоритма. 
+Пользователь должен иметь возможность оценить размер и работу каждого алгоритма.
+
+\section{Выбор средств реализации}
+
+Для выполнения данной лабораторной работы был выбран язык программирования C++. 
+Программное обеспечение, разработанное на C++, позволяет наглядно демонстрировать производительность алгоритмов и упрощает процесс тестирования. 
+Время измерялось с помощью функции \textit{clock()} из библиотеки \textit{time.h} \cite{cpp-lang-time}
+
+\section{Реализация алгоритмов}
+
+В листингах 3.1 -- 3.4 представлены реализации рассматриваемых алгоритмов.
+
+\hspace{0.6cm}В Листинге 3.1 показана реализация стандартного алгоритма умножения матриц.
+
+\bigskip
+
+\begin{lstlisting}[caption=Стандартный алгоритм умножения матриц]
+	vector<vector<int>> mulMatrices(const vector<vector<int>> &firstMatrix, const vector<vector<int>> &secondMatrix)
+	{
+		size_t n = firstMatrix.size(); 
+		size_t m = secondMatrix[0].size();
+		size_t q = firstMatrix[0].size(); 
+		vector<vector<int>> resultMatrix(n, vector<int>(m, 0));
+		
+		for (size_t i = 0; i < n; i++)
+			for (size_t j = 0; j < m; j++)
+				for (size_t k = 0; k < q; k++)
+					resultMatrix[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
+		
+		return resultMatrix;
+	}
+\end{lstlisting}
+
+\newpage
+
+\hspace{0.6cm}В Листинге 3.2 показана реализация алгоритма Винограда умножения матриц.
+\begin{lstlisting}[caption=Алгоритм Винограда умножения матриц]
+	vector<vector<int>> mulVinogradAlg(const vector<vector<int>> &firstMatrix, const vector<vector<int>> &secondMatrix)
+	{
+		size_t n = firstMatrix.size();
+		size_t m = secondMatrix[0].size();
+		size_t p = secondMatrix.size();
+		size_t q = firstMatrix[0].size();
+		vector<vector<int>> resultMatrix(n, vector<int>(m, 0)); 
+		vector<int> sumRow(n), sumColumn(m); 
+		
+		for (size_t i = 0; i < n; i++)
+			for (size_t j = 0; j < q / 2; j++)
+				sumRow[i] = sumRow[i] + firstMatrix[i][2 * j] * firstMatrix[i][2 * j + 1]; 
+		
+		for (size_t i = 0; i < m; i++)
+			for (size_t j = 0; j < p / 2; j++)
+				sumColumn[i] = sumColumn[i] + secondMatrix[2 * j][i] * secondMatrix[2 * j + 1][i];             
+		
+		for (size_t i = 0; i < n; i++)
+			for (size_t j = 0; j < m; j++)
+			{
+				resultMatrix[i][j] = resultMatrix[i][j] - sumRow[i] - sumColumn[j];
+				for (size_t k = 0; k < q / 2; k++)
+					resultMatrix[i][j] = resultMatrix[i][j] + (firstMatrix[i][2 * k + 1] + secondMatrix[2 * k][j]) * (firstMatrix[i][2 * k] + secondMatrix[2 * k + 1][j]);
+			}
+		
+		if (q % 2 == 1)
+		{
+			for (size_t i = 0; i < n; i++)
+				for (size_t j = 0; j < m; j++)
+					resultMatrix[i][j] += firstMatrix[i][q - 1] * secondMatrix[q - 1][j];
+		}
+		
+		return resultMatrix;
+	}
+\end{lstlisting}
+
+\vspace{60mm} 
+
+В Листинге 3.3 показана реализация оптимизированного алгоритма Винограда умножения матриц.
+\begin{lstlisting}[caption=Оптимизированный алгоритм Винограда умножения матриц]
+	vector<vector<int>> optVinogradAlg(const vector<vector<int>> &firstMatrix, const vector<vector<int>> &secondMatrix)
+	{
+		size_t n = firstMatrix.size(); 
+		size_t m = secondMatrix[0].size();
+		size_t p = secondMatrix.size(); 
+		size_t q = firstMatrix[0].size();
+		vector<vector<int>> resultMatrix(n, vector<int>(m, 0)); 
+		vector<int> sumRow(n), sumColumn(m); 
+		
+		for (size_t i = 0; i < n; i++)
+			for (size_t j = 0; j < q / 2; j++)
+				sumRow[i] += firstMatrix[i][j << 1] * firstMatrix[i][(j << 1) + 1]; 
+			
+		for (size_t i = 0; i < m; i++)
+			for (size_t j = 0; j < p / 2; j++)
+				sumColumn[i] += secondMatrix[j << 1][i] * secondMatrix[(j << 1) + 1][i];             
+		
+		for (size_t i = 0; i < n; i++)
+			for (size_t j = 0; j < m; j++)
+			{
+				resultMatrix[i][j] = resultMatrix[i][j] - sumRow[i] - sumColumn[j];
+				for (size_t k = 0; k < q / 2; k++)
+					resultMatrix[i][j] += (firstMatrix[i][(k << 1) + 1] + secondMatrix[k << 1][j]) * (firstMatrix[i][k << 1] 	+ secondMatrix[(k << 1) + 1][j]);
+			}
+		
+		if (q % 2 == 1)
+			for (size_t i = 0; i < n; i++)
+				for (size_t j = 0; j < m; j++)
+					resultMatrix[i][j] += firstMatrix[i][q - 1] * secondMatrix[q - 1][j];
+		
+		return resultMatrix;
+	}
+\end{lstlisting}
+\clearpage
+
+В Листинге 3.4 показана реализация алгоритма Штрассена умножения матриц.
+\begin{lstlisting}[caption=Алгоритм Штрассена умножения матриц]
+	vector<vector<int>> strassenMultiply(const vector<vector<int>> &A, const vector<vector<int>>& B) 
+	{
+		size_t n = A.size();
+		
+		if (n == 1) {
+			vector<vector<int>> result(1, vector<int>(1));
+			result[0][0] = A[0][0] * B[0][0];
+			return result;
+		}
+		
+		size_t halfSize = n / 2;
+		vector<vector<int>> A11(halfSize, vector<int>(halfSize));
+		vector<vector<int>> A12(halfSize, vector<int>(halfSize));
+		vector<vector<int>> A21(halfSize, vector<int>(halfSize));
+		vector<vector<int>> A22(halfSize, vector<int>(halfSize));
+		vector<vector<int>> B11(halfSize, vector<int>(halfSize));
+		vector<vector<int>> B12(halfSize, vector<int>(halfSize));
+		vector<vector<int>> B21(halfSize, vector<int>(halfSize));
+		vector<vector<int>> B22(halfSize, vector<int>(halfSize));
+		
+		for (size_t i = 0; i < halfSize; i++) {
+			for (size_t j = 0; j < halfSize; j++) {
+				A11[i][j] = A[i][j];
+				A12[i][j] = A[i][j + halfSize];
+				A21[i][j] = A[i + halfSize][j];
+				A22[i][j] = A[i + halfSize][j + halfSize];
+				B11[i][j] = B[i][j];
+				B12[i][j] = B[i][j + halfSize];
+				B21[i][j] = B[i + halfSize][j];
+				B22[i][j] = B[i + halfSize][j + halfSize];
+			}
+		}
+		
+		vector<vector<int>> P1 = strassenMultiply(matrixAdd(A11, A22), matrixAdd(B11, B22));
+		vector<vector<int>> P2 = strassenMultiply(matrixAdd(A21, A22), B11);
+		vector<vector<int>> P3 = strassenMultiply(A11, matrixSubtract(B12, B22));
+		vector<vector<int>> P4 = strassenMultiply(A22, matrixSubtract(B21, B11));
+		vector<vector<int>> P5 = strassenMultiply(matrixAdd(A11, A12), B22);
+		vector<vector<int>> P6 = strassenMultiply(matrixSubtract(A21, A11), matrixAdd(B11, B12));
+		vector<vector<int>> P7 = strassenMultiply(matrixSubtract(A12, A22), matrixAdd(B21, B22));
+		
+		vector<vector<int>> C11 = matrixAdd(matrixSubtract(matrixAdd(P1, P4), P5), P7);
+		vector<vector<int>> C12 = matrixAdd(P3, P5);
+		vector<vector<int>> C21 = matrixAdd(P2, P4);
+		vector<vector<int>> C22 = matrixAdd(matrixAdd(matrixSubtract(P1, P2), P3), P6);
+		
+		vector<vector<int>> result(n, vector<int>(n));
+		
+		for (size_t i = 0; i < halfSize; i++) {
+			for (size_t j = 0; j < halfSize; j++) {
+				result[i][j] = C11[i][j];
+				result[i][j + halfSize] = C12[i][j];
+				result[i + halfSize][j] = C21[i][j];
+				result[i + halfSize][j + halfSize] = C22[i][j];
+			}
+		}
+		
+		return result;
+	}
+\end{lstlisting}
+
+\section*{Вывод}
+
+Были выбраны инструменты и разработаны алгоритмы умножения матриц: стандартный, алгоритм Винограда, Штрассена и оптимизированный Винограда. 
+Также предоставлены листинги кода на выбранном языке программирования.

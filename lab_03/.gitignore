@@ -1,0 +1,13 @@
+*.exe
+.vscode
+*.aux
+obj/
+*.toc
+*.log
+*.out
+*.blg
+*.gz
+*.bbl
+*.bkp
+*.dtmp
+*.py

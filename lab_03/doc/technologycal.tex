@@ -1,0 +1,62 @@
+\chapter{Технологическая часть}
+
+В этом разделе предоставляются листинги выполненных алгоритмов и осуществляется выбор средств реализации.
+
+\section{Выбор средств реализации}
+
+Для выполнения данной лабораторной работы был выбран язык программирования C++. 
+Время измерялось с помощью функции \textit{clock()} из библиотеки \textit{time.h} \cite{cpp-lang-time}.
+
+\section{Реализация алгоритмов}
+
+В листингах 3.1 -- 3.3 представлены реализации рассматриваемых алгоритмов.
+
+\hspace{0.6cm}В Листинге 3.1 показана реализация алгоритма сортировки слиянием.
+
+\bigskip
+\begin{lstlisting}[caption=Алгоритм сортировки слиянием]
+	void merge_sort(vector<int> &array, size_t start, size_t end)
+	{
+		if (start < end)
+		{
+			size_t middle = start + (end - start) / 2;
+			merge_sort(array, start, middle);
+			merge_sort(array, middle + 1, end);
+			merge(array, start, middle, end);
+		}
+	}
+\end{lstlisting}
+\clearpage
+
+\hspace{0.6cm}В Листинге 3.2 показана реализация алгоритма сортировки бинарным деревом.
+\begin{lstlisting}[caption=Алгоритм сортировки бинарным деревом]
+	vector<int> bin_tree_sort(vector<int> &array)
+	{
+		node_t *root = nullptr;
+		
+		for (int data : array)
+		root = insert(root, data);
+		
+		vector<int> result; 
+		inorder_traversal(root, result);
+		return result;   
+	} 
+\end{lstlisting}
+
+В Листинге 3.3 показана реализация алгоритма сортировки расчесткой.
+\begin{lstlisting}[caption=Алгоритм сортировки расчесткой]
+	void coctail_sort(vector<int> &array)
+	{
+		double factor = 1.2473309;
+		
+		for (int step = array.size() - 1; step >= 1; step /= factor)
+		    for (int index = 0; index + step < (int)array.size(); index++)
+		        if (array[index] > array[index + step])
+		            swap(array[index], array[index + step]);
+	}
+\end{lstlisting}
+
+\section*{Вывод}
+
+Были выбраны инструменты для реализации и разработаны алгоритмы упорядочивания объектов массива: сортировки слиянием, бинарным деревом и расчесткой. 
+Также предоставлены листинги кода на выбранном языке программирования.

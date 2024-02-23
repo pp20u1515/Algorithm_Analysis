@@ -1,0 +1,198 @@
+\chapter{Технологическая часть}
+
+В этом разделе предоставляются реализации выполненных алгоритмов и осуществляется выбор средств реализации.
+
+\section{Выбор средств реализации}
+
+Для выполнения данной лабораторной работы был выбран язык программирования C++.  
+Время измерялось с помощью функции \textit{clock()} из библиотеки \textit{time.h}~\cite{time}.
+
+\section{Реализация алгоритмов}
+
+В листингах 3.1 -- 3.4 представлены реализации рассматриваемых алгоритмов.
+
+
+\hspace{0.6cm}В Листинге 3.1 показана реализация нерекурсивного алгоритма нахождения расстояния Левенштейна.
+
+\bigskip
+
+\begin{lstlisting}[caption=Нерекурсивный алгоритм поиска расстояния Левенштейна]
+	int normalLevenAlgorithm(const std::wstring &firstWord, const std::wstring &secondWord, bool key)
+	{
+		std::size_t firstLength = firstWord.length(); 
+		std::size_t secondLength = secondWord.length(); 
+		int answer = 0; 
+		int change = 0; 
+		
+		std::vector<std::vector<int>> matrix(firstLength + 1, std::vector<int>(secondLength + 1, 0));
+		
+		initMatrix(matrix, firstLength + 1, secondLength + 1);
+		
+		for (std::size_t indexI = 1; indexI < firstLength + 1; indexI++)
+			for (std::size_t indexJ = 1; indexJ < secondLength + 1; indexJ++)
+			{
+				change = checkEquality(firstWord[indexI - 1], secondWord[indexJ - 1]);
+			
+				matrix[indexI][indexJ] = std::min(matrix[indexI][indexJ - 1] + 1,
+				std::min(matrix[indexI - 1][indexJ] + 1,
+				matrix[indexI - 1][indexJ - 1] + change));
+			}
+		
+		if (key)
+			printMatrix(matrix, firstLength + 1, secondLength + 1);
+		
+		answer = matrix[firstLength][secondLength];     
+		
+		return answer;
+	}
+\end{lstlisting}
+
+\newpage
+
+\hspace{0.6cm}В Листинге 3.2 показана реализация нерекурсивного алгоритма нахождения расстояния Дамерау - Левенштейна.
+\begin{lstlisting}[caption=Нерекурсивный алгоритм поиска расстояния Дамерау - Левенштейна]
+	int normalLevenAlgorithm(const std::wstring &firstWord, const std::wstring &secondWord, bool key)
+	{
+		std::size_t firstLength = firstWord.length(); 
+		std::size_t secondLength = secondWord.length();
+		int answer = 0; 
+		int change = 0; 
+		
+		std::vector<std::vector<int>> matrix(firstLength + 1, std::vector<int>(secondLength + 1, 0));
+		
+		initMatrix(matrix, firstLength + 1, secondLength + 1);
+		
+		for (std::size_t indexI = 1; indexI < firstLength + 1; indexI++)
+			for (std::size_t indexJ = 1; indexJ < secondLength + 1; indexJ++)
+			{
+				change = checkEquality(firstWord[indexI - 1], secondWord[indexJ - 1]);
+			
+				matrix[indexI][indexJ] = std::min(matrix[indexI][indexJ - 1] + 1,
+				std::min(matrix[indexI - 1][indexJ] + 1,
+				matrix[indexI - 1][indexJ - 1] + change));
+			}
+		
+		if (key)
+			printMatrix(matrix, firstLength + 1, secondLength + 1);
+		
+		answer = matrix[firstLength][secondLength];     
+		
+		return answer;
+	}
+\end{lstlisting}
+
+\vspace{60mm} 
+
+В Листинге 3.3 показана реализация рекурсивного алгоритма нахождения расстояния Дамерау - Левенштейна без кэша.
+\begin{lstlisting}[caption=Рекурсивный алгоритм поиска расстояния Дамерау - Левенштейна без кэша]
+int recursiveDamerauLeven(const std::wstring firstWord, const std::wstring secondWord,
+std::size_t firstLenght, std::size_t secondLength)
+{
+	int rc = 0;
+	
+	if (firstLenght != 0)
+	{
+		if (secondLength != 0)
+		{
+			int change = checkEquality(firstWord[firstLenght - 1], secondWord[secondLength - 1]);
+			
+			rc = std::min(recursiveDamerauLeven(firstWord, secondWord, firstLenght, secondLength - 1) + 1,
+			std::min(recursiveDamerauLeven(firstWord, secondWord, firstLenght - 1, secondLength) + 1,
+			recursiveDamerauLeven(firstWord, secondWord, firstLenght - 1, secondLength - 1) + change));
+			
+			if (firstLenght > 1 && secondLength > 1 && firstWord[firstLenght - 1] == secondWord[secondLength - 2] &&
+			firstWord[firstLenght - 2] == secondWord[secondLength - 1])
+				rc = std::min(rc, recursiveDamerauLeven(firstWord, secondWord, firstLenght - 2, secondLength - 2) + 1);
+		}
+		else
+			rc = firstLenght;
+	}
+	else 
+		rc = secondLength;    
+	return rc;
+	}
+\end{lstlisting}
+
+\vspace{50mm}
+
+В Листинге 3.4 показана реализация рекурсивного алгоритма нахождения расстояния Дамерау - Левенштейна с кэшом.
+\begin{lstlisting}[caption=Рекурсивный алгоритм поиска расстояния Дамерау - Левенштейна с кэшом]
+	int cacheDamerauLeven(std::vector<std::vector<int>> &matrix, const std::wstring firstWord, const std::wstring secondWord,
+	const std::size_t &firstLenght, const std::size_t &secondLength)
+	{
+		if (firstLenght != 0)
+		{
+			if (secondLength != 0)
+			{
+				int change = checkEquality(firstWord[firstLenght - 1], secondWord[secondLength - 1]);
+				
+				matrix[firstLenght][secondLength] = std::min(cacheDamerauLeven(matrix, 
+				firstWord, secondWord, firstLenght, secondLength - 1) + 1,
+				std::min(cacheDamerauLeven(matrix, firstWord, secondWord, firstLenght - 1, secondLength) + 1,
+				cacheDamerauLeven(matrix, firstWord, secondWord, firstLenght - 1, secondLength - 1) + change));
+				
+				if (firstLenght > 1 && secondLength > 1 && firstWord[firstLenght - 1] == secondWord[secondLength - 2] &&
+				firstWord[firstLenght - 2] == secondWord[secondLength - 1])
+					matrix[firstLenght][secondLength] = std::min(matrix[firstLenght][secondLength], 
+					cacheDamerauLeven(matrix, firstWord, secondWord, firstLenght - 2, secondLength - 2) + 1);
+			}
+			else
+				matrix[firstLenght][secondLength] = firstLenght;
+		}
+		else
+			matrix[firstLenght][secondLength] = secondLength;
+		
+		return matrix[firstLenght][secondLength];
+	}
+	}
+\end{lstlisting}
+
+\section{Тестовые данные}
+
+В таблице 3.1 приведены входные данные, на которых было протестированно разработанное ПО.
+
+\begin{table}[ht]
+	\small
+	\begin{center}
+		\begin{threeparttable}
+			\caption{Функциональные тесты}
+			\label{tbl:func_tests}
+			\begin{tabular}{|c|c|c|c|c|c|}
+				\hline
+				\multicolumn{2}{|c|}{\bfseries Входные данные}
+				& \multicolumn{4}{c|}{\bfseries Расстояние и алгоритм} \\ 
+				\hline 
+				&
+				& \multicolumn{1}{c|}{\bfseries Левенштейна} 
+				& \multicolumn{3}{c|}{\bfseries Дамерау - Левенштейна} \\ \cline{3-6}
+				
+				\bfseries Строка 1 & \bfseries Строка 2 & \bfseries Итеративный & \bfseries Итеративный
+				
+				& \multicolumn{2}{c|}{\bfseries Рекурсивный} \\ \cline{5-6}
+				& & & & \bfseries Без кеша & \bfseries С кешом \\
+				\hline
+				a & b & 1 & 1 & 1 & 1 \\
+				\hline
+				бабушка & бабушка & 0 & 0 & 0 & 0 \\
+				\hline
+				кот & скат & 2 & 2 & 2 & 2 \\
+				\hline
+				56 & two & 3 & 3 & 3 & 3 \\
+				\hline
+				exam & example & 3 & 3 & 3 & 3 \\
+				\hline
+				конфета & календула & 6 & 6 & 6 & 6 \\
+				\hline
+				abcde & edcba & 4 & 4 & 4 & 4 \\
+				\hline
+				dasha & arisah & 5 & 4 & 4 & 4 \\
+				\hline
+			\end{tabular}	
+		\end{threeparttable}
+	\end{center}
+\end{table}
+
+
+\section*{Вывод}
+
+Были предоставлены листинги кода на выбранном языке программирования и приведена таблица с результатами выполнения программы на заданных тестовых данных.

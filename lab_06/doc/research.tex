@@ -1,0 +1,77 @@
+\chapter{Исследовательская часть}
+
+\section{Интерфейс приложения}
+
+На рисунке~\ref{fig:interface} представлен интерфейс приложения.
+
+\begin{figure}[h!]
+	\centering{\includegraphics[scale=0.9]{photos/interface.png}}
+	\caption{Интерфейс приложения}
+	\label{fig:interface}
+\end{figure}
+
+\section{Технические характеристики}
+
+Технические характеристики устройства:
+
+\begin{itemize}
+	\item операционная система --- Windows 11 Pro 64 -- разрядная система~\cite{windows};
+	\item оперативная память --- 16 Гбайт;
+	\item процессор --- 11th Gen Intel(R) Core(TM) i7-1165G7 с тактовой частотой 2.8 ГГц.
+\end{itemize}
+
+\section{Время выполнения реализаций алгоритмов}
+
+На рисунке~\ref{fig:graph1} представлено сравнение времени выполнения муравьиного алгоритма и алгоритма полного перебора.
+Время выполнения измерялось как среднее значение из десяти измерений.
+
+\begin{figure}[ht!]
+	\begin{center}
+		\captionsetup{singlelinecheck = false, justification=centerfirst}
+		\begin{tikzpicture}
+			\begin{axis}[
+				xlabel={Количество узлов графа},
+				ylabel={Время в секундах},
+				width = 0.95\textwidth,
+				height=0.5\textheight,
+				xmin=0, xmax=11,
+				ymode=log, 
+				legend pos=north west,
+				legend style={font=\footnotesize},
+				xmajorgrids=true,
+				grid style=dashed,
+				]
+				
+				\addplot[
+				blue,
+				semithick,
+				mark = *,
+				mark size = 3pt,
+				thick,
+				] file {graph/graph1.csv};
+				
+				\addplot[
+				red,
+				semithick,
+				mark = x,
+				] file {graph/graph2.csv};
+				
+				\legend{
+					Муравьиный алгоритм,
+					Алгоритм полного перебора
+				}
+			\end{axis}
+			
+		\end{tikzpicture}
+		\centering
+		\caption{Сравнение алгоритмов}
+		\label{fig:graph1}
+	\end{center}
+\end{figure}
+\clearpage
+
+\section*{Вывод}
+
+В результате исследования было получено, что использование муравьиного алгоритма наиболее эффективно при больших размерах матриц. Так, при размере матрицы, меньшим 9, муравьиный алгоритм медленнее алгоритма полного перебора, а при размере матрицы, равном 9 и  выше, муравьиный алгоритм быстрее алгоритма полного перебора. 
+Следовательно, при размерах матриц больше 9 следует использовать муравьиный алгоритм, но стоит учитывать, что он не гарантирует получения глобального оптимума при решении задачи.
+

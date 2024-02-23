@@ -1,0 +1,159 @@
+\chapter{Технологическая часть}
+
+В этом разделе предоставляются листинги реализованных алгоритмов и осуществляется выбор средств реализации.
+
+\section{Средства реализации}
+
+Для реализации программного обеспечения был выбран язык программирования С++~\cite{C++}.
+Данный выбор обусловлен  наличием у языка встроенной библиотекой измерения процессорного времени и предоставлением возможности:
+\begin{itemize}
+	\item работа с потоками ядра предоставляется классом $thread$~\cite{thread};
+	\item работа с очередями предоставляется классом $queue$~\cite{queue}.
+\end{itemize}
+
+\section{Реализация алгоритмов}
+
+На листинге~\ref{lst:queue} представлены используемые типы очередей.
+
+\begin{lstlisting}[label=lst:queue,caption=Реализация последовательной конвейерной обработки]
+	std::queue<std::shared_ptr<Report>> q1;
+	std::queue<std::shared_ptr<Report>> q2;
+	std::queue<std::shared_ptr<Report>> q3;
+\end{lstlisting}
+
+\clearpage
+
+На листинге~\ref{lst:lin} представлена последовательная реализация конвейерной обработки.
+
+\begin{lstlisting}[label=lst:lin,caption=Реализация последовательной конвейерной обработки]
+	void Conveyor::run_linear(size_t reports_cnt, bool log_fl) 
+	{
+		for (size_t i = 0; i < reports_cnt; i++)
+		{
+			std::string n = Conveyor::names[rand() % (names.size())];
+			std::shared_ptr<Report> new_report(new Report(n));
+			reports.push_back(new_report);
+			q1.push(new_report);
+		}
+		for (size_t i = 0; i < reports_cnt; i++) 
+		{
+			std::shared_ptr<Report> report = q1.front();
+			if (log_fl) report->get_text(i + 1);
+			else report->get_text_meassure(i + 1);
+			q2.push(report);
+			q1.pop();
+			report = q2.front();
+			if (log_fl) report->find_subst(i + 1);
+			else report->find_subst_meassure(i + 1);
+			q3.push(report);
+			q2.pop();
+			report = q3.front();
+			if (log_fl) report->output_res(i + 1);
+			else report->output_res_meassure(i + 1);
+			q3.pop();
+		}
+	}
+\end{lstlisting}
+
+\clearpage
+
+На листинге~\ref{lst:par} представлена реализация главного потока при параллельной работе конвейера.
+
+\begin{lstlisting}[label=lst:par,caption=Реализация основного потока для конвейерной обработки]
+	void Conveyor::run_parallel(size_t reports_cnt, bool log_fl)
+	{
+		for (size_t i = 0; i < reports_cnt; i++)
+		{
+			std::string n = Conveyor::names[rand() % (names.size())];
+			std::shared_ptr<Report> new_report(new Report(n));
+			reports.push_back(new_report);
+			q1.push(new_report);
+		}
+		
+		if (log_fl)
+		{
+			this->threads[0] = std::thread(&Conveyor::get_text, this);
+			this->threads[1] = std::thread(&Conveyor::find_subst, this);
+			this->threads[2] = std::thread(&Conveyor::output_res, this);
+		}
+		else
+		{
+			this->threads[0] = std::thread(&Conveyor::get_text_meassure, this);
+			this->threads[1] = std::thread(&Conveyor::find_subst_meassure, this);
+			this->threads[2] = std::thread(&Conveyor::output_res_meassure, this);
+		}
+		
+		for (int i = THRD_CNT-1; i >=0; i--)
+		{
+			this->threads[i].join();
+		}
+	}    
+\end{lstlisting}
+
+На листинге~\ref{lst:sh1} представлена реализация алгоритма извлечения текста из файла.
+\begin{lstlisting}[label=lst:sh1,caption=Реализация вспомогательного потока, отвечающего за извлечения текста из файла]
+	void Conveyor::get_text()
+	{
+		size_t task_num = 0;
+		while (!this->q1.empty())
+		{
+			std::shared_ptr<Report> report = q1.front();
+			q1.pop();
+			report->get_text(++task_num);
+			mutex_q2.lock();
+			q2.push(report);
+			mutex_q2.unlock();
+		}
+	}
+\end{lstlisting}
+
+На листинге~\ref{lst:sh2} представлена реализация алгоритма работы 2 рабочего потока, который выполняет поиск
+вхождений подстроки в строку.
+\begin{lstlisting}[label=lst:sh2,caption=Реализация вспомогательного потока, отвечающего за поиск подстроки в строке, language=C++]
+	void Conveyor::find_subst()
+	{
+		size_t task_num = 0;
+		do
+		{
+			if (!this->q2.empty())
+			{
+				mutex_q2.lock();
+				std::shared_ptr<Report> report = q2.front();
+				mutex_q2.unlock();
+				report->find_subst(++task_num);
+				mutex_q3.lock();
+				q3.push(report);
+				mutex_q3.unlock();
+				mutex_q2.lock();
+				q2.pop();
+				mutex_q2.unlock();
+			}
+		} while(!q1.empty() || !q2.empty());
+	}
+\end{lstlisting}
+
+На листинге~\ref{lst:sh3} представлена реализация алгоритма сохранения результатов поиска в файл.
+\begin{lstlisting}[label=lst:sh3,caption=Реализация вспомогательного потока, отвечающего за сохранение результатов в файл, language=C++]
+	void Conveyor::output_res()
+	{
+		size_t task_num = 0;
+		do
+		{
+			if (!this->q3.empty())
+			{
+				mutex_q3.lock();
+				std::shared_ptr<Report> report = q3.front();
+				mutex_q3.unlock();
+				report->output_res(++task_num);
+				mutex_q3.lock();
+				q3.pop();
+				mutex_q3.unlock();
+			}
+		} while (!q1.empty() || !q2.empty() || !q3.empty());
+	}   
+\end{lstlisting}
+
+\section*{Вывод}
+
+В данном разделе была разработана реализация конвейерных вычислений.
+Также в данном разделе была приведена информация о выбранных средствах для разработки алгоритмов.

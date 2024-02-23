@@ -1,0 +1,183 @@
+\chapter{Технологическая часть}
+
+В этом разделе предоставляются листинги реализованных алгоритмов и
+осуществляется выбор средств реализации.
+
+\section{Выбор средств реализации}
+
+Для выполнения данной лабораторной работы был выбран язык программирования C++. 
+Время измерялось с помощью функции clock() из библиотеки time.h~\cite{clock_t}.
+
+\section{Реализация алгоритмов}
+
+В листинге 3.1 представлена реализация алгоритма полного перебора.
+
+\begin{lstlisting}[caption=Алгоритм полного перебора]
+	pair<int, vector<int>> brute_force_alg(const vector<vector<int>> &matrix, const unsigned int &amount_node) 
+	{
+		vector<int> permutation(amount_node);
+		for (unsigned int i = 0; i < amount_node; i++)
+			permutation[i] = i;
+		
+		int best_dist = INT_MAX;
+		vector<int> best_route;
+		
+		do 
+		{
+			int cur_dist = 0;
+			
+			for (unsigned int i = 0; i < amount_node - 1; ++i)
+				cur_dist += matrix[permutation[i]][permutation[i + 1]];
+			
+			if (cur_dist < best_dist) 
+			{
+				best_dist = cur_dist;
+				best_route = permutation;
+			}
+		} while (next_permutation(permutation.begin(), permutation.end())); 
+		
+		return make_pair(best_dist, best_route);
+	}
+\end{lstlisting}
+
+В листинге 3.2 представлена реализация алгоритма вычисления среднего значения расстояний между всеми парами.
+
+\begin{lstlisting}[caption=Алгоритм вычисления среднего значения расстояний между всеми парами]
+	double calcQ(const vector<vector<int>>& matrix) 
+	{
+		double sum = 0.0;
+		int count = 0;
+		
+		for (const auto& row : matrix)
+			for (int dist : row)
+				if (dist != 0) 
+					{
+						sum += dist;
+						count++;
+					}
+		return sum / count;
+	}
+\end{lstlisting}
+
+\clearpage
+
+В листинге 3.3 представлена реализация алгоритма выбора следующего города, куда муравей должен переместиться.
+
+\begin{lstlisting}[caption=Алгоритм  выбора следующего города]
+	int chooseNextLoc(const vector<double> &P) 
+	{
+		double posibility = static_cast<double>(rand()) / RAND_MAX;
+		double cur_posibility = 0.0;
+		int to = 0;
+		
+		while (cur_posibility < posibility && to < P.size()) 
+		{
+			cur_posibility += P[to];
+			to++;
+		}
+		
+		return to - 1;
+	}  
+\end{lstlisting}
+
+В листинге 3.4 представлена реализация алгоритма вычисления пути, пройденного муравьем.
+
+\begin{lstlisting}[caption=Алгоритм  вычисления пути]
+	double calcLen(const vector<vector<int>> &matrix, const vector<int> &ant_route) 
+	{
+		double ant_dist = 0.0;
+		
+		for (size_t i = 0; i < ant_route.size() - 1; ++i) 
+		{
+			int city_from = ant_route[i];
+			int city_to = ant_route[i + 1];
+			ant_dist += matrix[city_from][city_to];
+		}
+		return ant_dist;
+	}
+\end{lstlisting}
+
+\clearpage
+
+В листинге 3.5 представлена реализация муравьиного алгоритма.
+
+\begin{lstlisting}[caption=Муравьиный алгоритм]
+	pair<double, vector<int>> fit(const vector<vector<int>> &matrix, const int &ants) 
+	{
+		srand(static_cast<unsigned int>(time(nullptr)));
+		int cities = matrix.size();
+		vector<vector<double>> tao(cities, vector<double>(cities, 1.0)); 
+		
+		vector<vector<int>> ant_routes(ants, vector<int>(cities, 0)); 
+		vector<double> ant_dist(ants, 0.0); 
+		
+		vector<int> best_route; 
+		double best_dist = numeric_limits<double>::infinity();
+		
+		Q = calcQ(matrix);
+		
+		for (int day = 0; day < days; ++day) 
+		{
+			for (int ant = 0; ant < ants; ++ant) 
+			{
+				ant_routes[ant][0] = rand() % cities;
+				
+				for (int i = 1; i < cities; ++i) 
+				{
+					int from_city = ant_routes[ant][i - 1];
+					
+					vector<double> P(cities, 0.0);
+					double sum_prob = 0.0;
+					
+					for (int j = 0; j < cities; ++j) 
+					{
+						if (find(ant_routes[ant].begin(), ant_routes[ant].begin() + i, j) == ant_routes[ant].begin() + i) 
+						{
+							double pher = pow(tao[from_city][j], a);
+							double dist = pow(1.0 / matrix[from_city][j], b);
+							P[j] = pher * dist;
+							sum_prob += P[j];
+						}
+					}
+					
+					for (int j = 0; j < cities; ++j)
+					P[j] /= sum_prob;
+					
+					int next_city = chooseNextLoc(P);
+					ant_routes[ant][i] = next_city;
+				}
+				
+				ant_dist[ant] = calcLen(matrix, ant_routes[ant]);
+				
+				if (ant_dist[ant] < best_dist) 
+				{
+					best_dist = ant_dist[ant];
+					best_route = ant_routes[ant];
+				}
+			}
+			for (int ant = 0; ant < ants; ++ant) 
+			{
+				double delta_tao = Q / ant_dist[ant];
+				for (int i = 0; i < cities - 1; ++i) 
+				{
+					int city_from = ant_routes[ant][i];
+					int city_to = ant_routes[ant][i + 1];
+					tao[city_from][city_to] += delta_tao;
+					
+					if (tao[city_from][city_to] < MIN_PHER) {
+						tao[city_from][city_to] = MIN_PHER;
+					}
+				}
+			}
+			for (int i = 0; i < cities; ++i)
+				for (int j = 0; j < cities; ++j)
+					tao[i][j] *= (1.0 - rho);
+		}
+		return make_pair(best_dist, best_route);
+	}
+\end{lstlisting}
+
+\section*{Вывод}
+
+Были представлены листинги всех реализаций алгоритмов --- полного перебора и муравьиного. 
+Также в данном разделе была приведена информация о выбранных средствах для разработки алгоритмов.
