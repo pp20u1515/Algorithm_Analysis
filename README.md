@@ -1,6 +1,6 @@
-### Algorithm_Analysis
+## Algorithm_Analysis
 
-## Варианты
+# Варианты
 
 # Лабораторная работа 1
 
